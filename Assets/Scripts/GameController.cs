@@ -1,3 +1,5 @@
+using Newtonsoft.Json.Linq;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -5,176 +7,96 @@ using UnityEngine.UI;
 
 public class GameController : MonoBehaviour
 {
+    //HARDCODED VALUES FOR TESTING
+
+    int totalItems = 4;
+    float[] agentOneValues = { 1f, 2f, 3f, 4f };
+    float[] agentTwoValues = { 3f, 1f, 4f, 2f };
+
     public GameObject SquarePrefab;
+    private List<GameObject>[] agents = new List<GameObject>[4];
 
-    private float[] agentOneAVals; //values
-    private ArrayList agentA1 = new ArrayList(); //objects
 
-    public void GetInputA1(string agentOneInput)
+    public GameObject ItemHolders;
+    public Transform canvasTransform;
+
+    void Start()
     {
-        agentOneAVals = System.Array.ConvertAll(agentOneInput.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
-        int numItems = agentOneAVals.Length;
 
-        //clear everything
-        for (int i = 0; i < agentA1.Count; i++)
+        GameObject ItemHolder = Instantiate(ItemHolders, new Vector3(1000, 0, 0), Quaternion.identity);
+
+
+        ItemHolder.transform.SetParent(canvasTransform, false);
+        ItemHolder.transform.SetAsLastSibling();
+
+
+        /*for (int i = 0; i < agents.Length; i++)
         {
-            //destroy object in unity
-            GameObject removing = (GameObject)agentA1[agentA1.Count - 1];
-            Destroy(removing);
-
-            //remove object from list
-            agentA1.RemoveAt(agentA1.Count - 1);
+            agents[i] = new List<GameObject>();
         }
+        createItems();
+        */
+    }
 
-        //create everything
-        float currentSize = -2.5f;
-        for (int i = 0; i < numItems; i++)
+    /*private void createItems()
+    {
+        for (int i = 0; i < agentOneValues.Length; i++)
         {
-            //create square
-            GameObject square = Instantiate(SquarePrefab);
-            Transform squareTransform = square.GetComponent<Transform>();
+            GameObject squareA = Instantiate(SquarePrefab);
+            squareA.transform.localScale = new Vector3(0.05f, agentOneValues[i] * 0.05f, 0f);
+            squareA.transform.position += new Vector3(-8f, (-3.75f + (i * 2.5f)), 0f);
 
-            //resize:
-            Transform transform = square.GetComponent<Transform>();
-            Vector3 newScale = transform.localScale;
-            newScale.y *= agentOneAVals[i];
-            transform.localScale = newScale;
-
-            //transform position:
-            square.transform.position = new Vector3(-6.25f, currentSize + (agentOneAVals[i] / 2), 0.0f);
-
-            //save and update data:
-            agentA1.Add(square);
-            currentSize = currentSize + (agentOneAVals[i] * 0.90f);
+            GameObject squareB = Instantiate(SquarePrefab);
+            squareB.transform.localScale = new Vector3(0.05f, agentTwoValues[i] * 0.05f, 0f);
+            squareB.transform.position += new Vector3(-7f, (-3.75f + (i * 2.5f)), 0f);
         }
     }
 
-    private float[] agentTwoAVals; //values
-    private ArrayList agentA2 = new ArrayList(); //objects
-
-    public void GetInputA2(string agentTwoInput)
+    private void ClearAgentData(int agentIndex)
     {
-        agentTwoAVals = System.Array.ConvertAll(agentTwoInput.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
-        int numItems = agentTwoAVals.Length;
-
-        //clear everything
-        for (int i = 0; i < agentA2.Count; i++)
+        foreach (GameObject obj in agents[agentIndex])
         {
-            //destroy object in unity
-            GameObject removing = (GameObject)agentA2[agentA2.Count - 1];
-            Destroy(removing);
-
-            //remove object from list
-            agentA2.RemoveAt(agentA2.Count - 1);
+            Destroy(obj);
         }
+        agents[agentIndex].Clear();
+    }
 
-        //create everything
-        float currentSize = -2.5f;
-        for (int i = 0; i < numItems; i++)
+    private void CreateAgentData(int agentIndex, string input, float xPos)
+    {
+        float[] values = System.Array.ConvertAll(input.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
+        float currentSize = -2f;
+
+        foreach (float val in values)
         {
-            //create square
             GameObject square = Instantiate(SquarePrefab);
-            Transform squareTransform = square.GetComponent<Transform>();
-
-            //resize:
             Transform transform = square.GetComponent<Transform>();
             Vector3 newScale = transform.localScale;
-            newScale.y *= agentTwoAVals[i];
+            newScale.y *= val;
             transform.localScale = newScale;
-
-            //transform position:
-            square.transform.position = new Vector3(-2.75f, currentSize + (agentTwoAVals[i] / 2), 0.0f);
-
-            //save and update data:
-            agentA2.Add(square);
-            currentSize = currentSize + (agentTwoAVals[i] * 0.9f);
+            square.transform.position = new Vector3(xPos, currentSize + (val / 2), 0.0f);
+            agents[agentIndex].Add(square);
+            currentSize += val * 0.9f;
         }
     }
 
-
-    private float[] agentOneBVals; //values
-    private ArrayList agentB1 = new ArrayList(); //objects
-
-    public void GetInputB1(string agentOneInput)
+    public void GetInput1(string inputOne)
     {
-        agentOneBVals = System.Array.ConvertAll(agentOneInput.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
-        int numItems = agentOneBVals.Length;
+        float[] indexes = System.Array.ConvertAll(inputOne.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
 
-        //clear everything
-        for (int i = 0; i < agentB1.Count; i++)
-        {
-            //destroy object in unity
-            GameObject removing = (GameObject)agentB1[agentB1.Count - 1];
-            Destroy(removing);
+        ClearAgentData(0);
+        CreateAgentData(0, inputOne, -4.35f);
 
-            //remove object from list
-            agentB1.RemoveAt(agentB1.Count - 1);
-        }
-
-        //create everything
-        float currentSize = -2.5f;
-        for (int i = 0; i < numItems; i++)
-        {
-            //create square
-            GameObject square = Instantiate(SquarePrefab);
-            Transform squareTransform = square.GetComponent<Transform>();
-
-            //resize:
-            Transform transform = square.GetComponent<Transform>();
-            Vector3 newScale = transform.localScale;
-            newScale.y *= agentOneBVals[i];
-            transform.localScale = newScale;
-
-            //transform position:
-            square.transform.position = new Vector3(2.75f, currentSize + (agentOneBVals[i] / 2), 0.0f);
-
-            //save and update data:
-            agentB1.Add(square);
-            currentSize = currentSize + (agentOneBVals[i] * 0.9f);
-        }
+        ClearAgentData(2);
+        CreateAgentData(2, inputOne, 3.25f);
     }
 
-    private float[] agentTwoBVals; //values
-    private ArrayList agentB2 = new ArrayList(); //objects
-
-    public void GetInputB2(string agentTwoInput)
+    public void GetInput2(string inputTwo)
     {
-        agentTwoBVals = System.Array.ConvertAll(agentTwoInput.Split(new char[] { ',', ' ' }, System.StringSplitOptions.RemoveEmptyEntries), float.Parse);
-        int numItems = agentTwoBVals.Length;
+        ClearAgentData(1);
+        CreateAgentData(1, inputTwo, -0.85f);
 
-        //clear everything
-        for (int i = 0; i < agentB2.Count; i++)
-        {
-            //destroy object in unity
-            GameObject removing = (GameObject)agentB2[agentB2.Count - 1];
-            Destroy(removing);
-
-            //remove object from list
-            agentB2.RemoveAt(agentB2.Count - 1);
-        }
-
-        //create everything
-        float currentSize = -2.5f;
-        for (int i = 0; i < numItems; i++)
-        {
-            //create square
-            GameObject square = Instantiate(SquarePrefab);
-            Transform squareTransform = square.GetComponent<Transform>();
-
-            //resize:
-            Transform transform = square.GetComponent<Transform>();
-            Vector3 newScale = transform.localScale;
-            newScale.y *= agentTwoBVals[i];
-            transform.localScale = newScale;
-
-            //transform position:
-            square.transform.position = new Vector3(6.25f, currentSize + (agentTwoBVals[i] / 2), 0.0f);
-
-            //save and update data:
-            agentB2.Add(square);
-            currentSize = currentSize + (agentTwoBVals[i] * 0.9f);
-        }
+        ClearAgentData(3);
+        CreateAgentData(3, inputTwo, 6.75f);
     }
-
-
-} //GameController
+    */
+}
